@@ -6,8 +6,14 @@ namespace ParkingApp.business.Service
 {
     public class ParkingServiceImpl : ParkingService
     {
-        ParkingRepository parkingRepository = new ParkingRepository();
-        VehicleTypeRepository vehicleTypeRepository = new VehicleTypeRepository();
+        private readonly ParkingRepository parkingRepository;
+        private readonly VehicleTypeRepository vehicleTypeRepository;
+
+        public ParkingServiceImpl(ParkingRepository parkingRepository, VehicleTypeRepository vehicleTypeRepository)
+        {
+            this.parkingRepository = parkingRepository;
+            this.vehicleTypeRepository = vehicleTypeRepository;
+        }
 
         public List<ParkingDto> findRegiterdByHour(DateTime intialDate, DateTime finalDate)
         {
@@ -33,7 +39,7 @@ namespace ParkingApp.business.Service
 
         public MessageDto newEntry(EntryParkingDto entryParkingDto)
         {
-            if (parkingRepository.findVehicleByPlacaActive(entryParkingDto.placa) != null)
+            if (parkingRepository.findVehicleByPlacaActive(entryParkingDto.placa).activo)
             {
                 return new MessageDto("El vehiculo tiene parqueadero activo");
             }
@@ -45,7 +51,7 @@ namespace ParkingApp.business.Service
             catch (Exception e)
             {
                 string error = e.Message;
-                return new MessageDto("Hubo un error al conectar con la base de datos");
+                return new MessageDto("Hubo un error al conectar con la base de datos", true);
             }
         }
 
@@ -55,35 +61,40 @@ namespace ParkingApp.business.Service
                 if (parkingRepository.findBillNumber(vehicleToPayDto.numeroFactura))
                     return new MessageDto("La factura ya se ha usado");
             HistParkingModel parkingModel = parkingRepository.findVehicleByPlacaActive(vehicleToPayDto.placa);
-            if (parkingModel != null)
+            if (parkingModel.placa == null)
             {
                 return new MessageDto("No se encontró el vehiculo");
             }
             parkingModel.fechaSalida = DateTime.Now;
-            parkingModel.tiempoParqueo = (int)parkingModel.fechaIngrso.Subtract((DateTime)parkingModel.fechaSalida).TotalMinutes;
+            parkingModel.tiempoParqueo = (int)parkingModel.fechaSalida.Subtract((DateTime)parkingModel.fechaIngrso).TotalMinutes;
             parkingModel.vlrPago = parkingModel.tiempoParqueo * vehicleTypeRepository.findVehicleTypeById(parkingModel.idTipoVehiculo).vlrTarifa;
             if (vehicleToPayDto.descuento)
+            {
                 parkingModel.vlrPago = parkingModel.vlrPago * 0.7;
-            return parkingRepository.updateParking(parkingModel) ? new MessageDto("El valor a pagar es: ", parkingModel.vlrPago) : new MessageDto("Hubo un error, vuelva a intentar");
+                parkingModel.descuento = vehicleToPayDto.descuento;
+                parkingModel.numeroFactura = vehicleToPayDto.numeroFactura;
+            }
+            return parkingRepository.updateParking(parkingModel) ? new MessageDto("El valor a pagar es: "+ parkingModel.vlrPago, parkingModel.vlrPago) : new MessageDto("Hubo un error, vuelva a intentar", true);
         }
 
         public MessageDto payParking(String placa, bool toPay)
         {
             try
             {
-                HistParkingModel parkingModel = parkingRepository.findVehicleByPlacaActive(placa);
+                HistParkingModel parkingModel = parkingRepository.findToPay(placa);
                 if (toPay)
                 {
                     parkingModel.activo = false;
-                    return parkingRepository.updateParking(parkingModel) ? new MessageDto("Actualización exitosa") : new MessageDto("Hubo un error, vuelva a intentar");
-
+                    return parkingRepository.updateParking(parkingModel) ? new MessageDto("Actualización exitosa") : new MessageDto("Hubo un error, vuelva a intentar", true);
                 }
-                return new MessageDto("Pago cancelado");
+                parkingModel.descuento = false;
+                parkingModel.numeroFactura = "";
+                return parkingRepository.updateParking(parkingModel) ? new MessageDto("Pago cancelado") : new MessageDto("Hubo un error, vuelva a intentar", true);
             }
             catch (Exception e)
             {
                 string error = e.Message;
-                return new MessageDto("Hubo un error al conectar con la base de datos");
+                return new MessageDto("Hubo un error al conectar con la base de datos" ,true);
             }
         }
     }

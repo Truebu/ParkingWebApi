@@ -8,11 +8,8 @@ namespace ParkingApp.Config
 
         public ConnectorSql()
         {
-
-
             var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
-
-            stringSQL = builder.GetSection("ConnectionStrings:CadenaSQL").Value;
+            stringSQL = builder.GetSection("ConnectionStrings:stringSQL").Value;
         }
 
         public string getStringSQL()

@@ -8,10 +8,16 @@ namespace ParkingApp.Models.Repositories
 {
     public class VehicleTypeRepository
     {
+        ConnectorSql cn;
+
+        public VehicleTypeRepository(ConnectorSql cn)
+        {
+            this.cn = cn;
+        }
+
         public VehicleTypeModel findVehicleTypeById(int idTipoVehiculo)
         {
             VehicleTypeModel vehicleTypeModel = new VehicleTypeModel();
-            var cn = new ConnectorSql();
 
             using (var conection = new SqlConnection(cn.getStringSQL()))
             {

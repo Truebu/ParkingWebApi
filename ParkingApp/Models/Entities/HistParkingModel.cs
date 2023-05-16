@@ -19,17 +19,17 @@ namespace ParkingApp.Models.entities
         public bool activo { get; set; }
 
         public HistParkingModel(int idTrParqueo, int idTipoVehiculo,
-            string placa, DateTime fechaIngrso, DateTime fechaSalida,
+            string placa, DateTime fechaIngrso, DateTime? fechaSalida,
             int vlrPago, int tiempoParqueo, bool descuento, string numeroFactura, bool activo)
         {
             this.idTrParqueo = idTrParqueo;
             this.idTipoVehiculo = idTipoVehiculo;
             this.placa = placa;
             this.fechaIngrso = fechaIngrso;
-            this.fechaSalida = fechaSalida;
-            this.vlrPago = vlrPago;
-            this.tiempoParqueo = tiempoParqueo;
-            this.descuento = descuento;
+            this.fechaSalida = (DateTime)fechaSalida;
+            this.vlrPago = (double)vlrPago;
+            this.tiempoParqueo = (int)tiempoParqueo;
+            this.descuento = (bool)descuento;
             this.numeroFactura = numeroFactura;
             this.activo = activo;
         }
@@ -46,5 +46,15 @@ namespace ParkingApp.Models.entities
             this.activo = true;
         }
 
+        public HistParkingModel(int idTrParqueo, int idTipoVehiculo, string placa, DateTime fechaIngrso, double vlrPago, int tiempoParqueo, bool activo)
+        {
+            this.idTrParqueo = idTrParqueo;
+            this.idTipoVehiculo = idTipoVehiculo;
+            this.placa = placa;
+            this.fechaIngrso = fechaIngrso;
+            this.vlrPago = vlrPago;
+            this.tiempoParqueo = tiempoParqueo;
+            this.activo = activo;
+        }
     }
 }

@@ -8,46 +8,55 @@ namespace ParkingApp.business.Controllers
     [ApiController]
     public class ParkingController : ControllerBase
     {
-        private ParkingService _parkingService;
+        private readonly ParkingService _parkingService;
 
         public ParkingController(ParkingService parkingService)
         {
-            this._parkingService = parkingService;
+            _parkingService = parkingService;
         }
 
         [HttpGet]
         [Route("list")]
-        public  List<ParkingDto> findRegiterdByHour(DateTime intialDate, DateTime finalDate)
+        public IActionResult findRegiterdByHour(DateTime intialDate, DateTime finalDate)
         {
-            return _parkingService.findRegiterdByHour(intialDate, finalDate);
+            return Ok(_parkingService.findRegiterdByHour(intialDate, finalDate));
         }
 
         [HttpGet]
         [Route("listActive")]
-        public List<ParkingDto> findActivePArking()
+        public IActionResult findActivePArking()
         {
-            return _parkingService.findActivePArking();
+            return Ok(_parkingService.findActivePArking());
         }
-        
+
         [HttpPost]
         [Route("newEntry")]
-        public MessageDto newEntry(EntryParkingDto entryParkingDto)
+        public IActionResult newEntry(EntryParkingDto entryParkingDto)
         {
-            return _parkingService.newEntry(entryParkingDto);
+            MessageDto dto = _parkingService.newEntry(entryParkingDto);
+            if (dto.error)
+                return BadRequest(dto.message);
+            return Ok(dto.message);
         }
 
         [HttpPut]
         [Route("calculatePay")]
-        public MessageDto calculateToPay(VehicleToPayDto vehicleToPayDto)
+        public IActionResult calculateToPay(VehicleToPayDto vehicleToPayDto)
         {
-            return _parkingService.calculateToPay(vehicleToPayDto);
+            MessageDto dto = _parkingService.calculateToPay(vehicleToPayDto);
+            if (dto.error)
+                return BadRequest(dto.message);
+            return Ok(dto.message);
         }
-        
+
         [HttpPut]
         [Route("pay")]
-        public MessageDto payParking(String placa, bool toPay)
+        public IActionResult payParking(String placa, bool toPay)
         {
-            return _parkingService.payParking(placa, toPay);
+            MessageDto dto = _parkingService.payParking(placa, toPay);
+            if (dto.error)
+                return BadRequest(dto.message);
+            return Ok(dto.message);
         }
     }
 }

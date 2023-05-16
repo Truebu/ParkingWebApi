@@ -12,12 +12,12 @@ idTrParqueo int identity primary key,
 idTipoVehiculo int REFERENCES VEHICLETYPE(idTipoVehiculo),
 placa varchar(50) NOT NULL,
 fechaIngrso DATETIME NOT NULL,
-fechaSalida DATETIME NOT NULL,
+fechaSalida DATETIME,
 vlrPago int,
 tiempoParqueo int,
 descuento bit,
 numeroFactura varchar(50),
-activo bit,
+activo bit NOT NULL,
 )
 
 INSERT VEHICLETYPE (vlrTarifa, nombreTipo) VALUES (110, 'CARRO')

@@ -7,10 +7,16 @@ namespace ParkingApp.Models.Repositories
 {
     public class ParkingRepository
     {
+        ConnectorSql cn;
+
+        public ParkingRepository(ConnectorSql cn)
+        {
+            this.cn = cn;
+        }
+
         public HistParkingModel findVehicleByPlacaActive(String placa)
         {
             HistParkingModel histParking = new HistParkingModel();
-            var cn = new ConnectorSql();
 
             using (var conection = new SqlConnection(cn.getStringSQL()))
             {
@@ -27,8 +33,36 @@ namespace ParkingApp.Models.Repositories
                         histParking.idTrParqueo = Convert.ToInt32(dr["idTrParqueo"]);
                         histParking.idTipoVehiculo = Convert.ToInt32(dr["idTipoVehiculo"]);
                         histParking.placa = dr["placa"].ToString();
-                        histParking.fechaIngrso = Convert.ToDateTime(dr["fechaIngrso"]);
-                        histParking.fechaSalida = Convert.ToDateTime(dr["fechaSalida"]);
+                        histParking.fechaIngrso = DateTime.Parse(dr["fechaIngrso"].ToString());
+                        histParking.activo = Convert.ToBoolean(dr["activo"]);
+                    }
+                }
+            }
+
+            return histParking;
+        }
+
+        public HistParkingModel findToPay(String placa)
+        {
+            HistParkingModel histParking = new HistParkingModel();
+
+            using (var conection = new SqlConnection(cn.getStringSQL()))
+            {
+                conection.Open();
+                SqlCommand cmd = new SqlCommand("sp_find_placa_active", conection);
+                cmd.Parameters.AddWithValue("placa", placa);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                using (var dr = cmd.ExecuteReader())
+                {
+
+                    while (dr.Read())
+                    {
+                        histParking.idTrParqueo = Convert.ToInt32(dr["idTrParqueo"]);
+                        histParking.idTipoVehiculo = Convert.ToInt32(dr["idTipoVehiculo"]);
+                        histParking.placa = dr["placa"].ToString();
+                        histParking.fechaIngrso = DateTime.Parse(dr["fechaIngrso"].ToString());
+                        histParking.fechaSalida = DateTime.Parse(dr["fechaSalida"].ToString());
                         histParking.vlrPago = Convert.ToInt32(dr["vlrPago"]);
                         histParking.tiempoParqueo = Convert.ToInt32(dr["tiempoParqueo"]);
                         histParking.descuento = Convert.ToBoolean(dr["descuento"]);
@@ -44,7 +78,6 @@ namespace ParkingApp.Models.Repositories
         public bool findBillNumber(String numeroFactura)
         {
             bool exixts = false;
-            var cn = new ConnectorSql();
 
             using (var conection = new SqlConnection(cn.getStringSQL()))
             {
@@ -69,7 +102,6 @@ namespace ParkingApp.Models.Repositories
         public List<HistParkingModel> findRegiterdByHour(DateTime intialDate, DateTime finalDate)
         {
             List<HistParkingModel> histParkingModels = new List<HistParkingModel>();
-            var cn = new ConnectorSql();
 
             using (var conection = new SqlConnection(cn.getStringSQL()))
             {
@@ -87,12 +119,9 @@ namespace ParkingApp.Models.Repositories
                             Convert.ToInt32(dr["idTrParqueo"]),
                             Convert.ToInt32(dr["idTipoVehiculo"]),
                             dr["placa"].ToString(),
-                            Convert.ToDateTime(dr["fechaIngrso"]),
-                            Convert.ToDateTime(dr["fechaSalida"]),
-                            Convert.ToInt32(dr["vlrPago"]),
-                            Convert.ToInt32(dr["tiempoParqueo"]),
-                            Convert.ToBoolean(dr["descuento"]),
-                            dr["numeroFactura"].ToString(),
+                            DateTime.Parse(dr["fechaIngrso"].ToString()),
+                            dr["vlrPago"].ToString().Equals("") ? 0 : Convert.ToInt32(dr["vlrPago"]),
+                            dr["tiempoParqueo"].ToString().Equals("") ? 0 : Convert.ToInt32(dr["tiempoParqueo"]),
                             Convert.ToBoolean(dr["activo"])
                         ));
                     }
@@ -104,7 +133,6 @@ namespace ParkingApp.Models.Repositories
         public List<HistParkingModel> findActivePArking()
         {
             List<HistParkingModel> histParkingModels = new List<HistParkingModel>();
-            var cn = new ConnectorSql();
 
             using (var conection = new SqlConnection(cn.getStringSQL()))
             {
@@ -120,12 +148,9 @@ namespace ParkingApp.Models.Repositories
                             Convert.ToInt32(dr["idTrParqueo"]),
                             Convert.ToInt32(dr["idTipoVehiculo"]),
                             dr["placa"].ToString(),
-                            Convert.ToDateTime(dr["fechaIngrso"]),
-                            Convert.ToDateTime(dr["fechaSalida"]),
-                            Convert.ToInt32(dr["vlrPago"]),
-                            Convert.ToInt32(dr["tiempoParqueo"]),
-                            Convert.ToBoolean(dr["descuento"]),
-                            dr["numeroFactura"].ToString(),
+                            DateTime.Parse(dr["fechaIngrso"].ToString()),
+                            dr["vlrPago"].ToString().Equals("") ? 0 : Convert.ToInt32(dr["vlrPago"]),
+                            dr["tiempoParqueo"].ToString().Equals("") ? 0 : Convert.ToInt32(dr["tiempoParqueo"]),
                             Convert.ToBoolean(dr["activo"])
                         ));
                     }
@@ -139,8 +164,6 @@ namespace ParkingApp.Models.Repositories
         {
             try
             {
-                var cn = new ConnectorSql();
-
                 using (var conection = new SqlConnection(cn.getStringSQL()))
                 {
                     conection.Open();
@@ -165,8 +188,6 @@ namespace ParkingApp.Models.Repositories
         {
             try
             {
-                var cn = new ConnectorSql();
-
                 using (var conection = new SqlConnection(cn.getStringSQL()))
                 {
                     conection.Open();
@@ -179,7 +200,7 @@ namespace ParkingApp.Models.Repositories
                     cmd.Parameters.AddWithValue("vlrPago", model.vlrPago);
                     cmd.Parameters.AddWithValue("tiempoParqueo", model.tiempoParqueo);
                     cmd.Parameters.AddWithValue("descuento", model.descuento);
-                    cmd.Parameters.AddWithValue("numeroFactura", model.numeroFactura);
+                    cmd.Parameters.AddWithValue("numeroFactura", (model.numeroFactura == null)? "": model.numeroFactura);
                     cmd.Parameters.AddWithValue("activo", model.activo);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
